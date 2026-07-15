@@ -12,11 +12,16 @@ outputs/checkpoints/
 
 # CCS build artifacts
 Debug/
-*.obj
-*.d
+Release/
+.clangd/
+.settings/
+.theia/
 *.out
 *.map
-.clangd/
+*.obj
+*.d
+*.o
+_linkInfo.xml
 
 # Generated C code (reproducible from export scripts)
 outputs/kws_inference.c
