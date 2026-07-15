@@ -1,0 +1,141 @@
+
+#ifndef _PRU0_HP_
+#define _PRU0_HP_
+
+
+// ---------------- 地址定义 ----------------
+#define DA_CONFIG_LEN_ADDR       0xC6FFFFF8
+#define DA_CONFIG_DA_EN_ADDR     0xC6FFFFFA
+#define DA_CONFIG_FLAG_ADDR      0xC6FFFFFB
+#define DA_CONFIG_PP_ADDR        0xC6FFFFFC
+#define DA_CONFIG_SEL_ADDR       0xC6FFFFFD
+
+
+#define DA_DATA1_ADDR_PING       0xC7040000
+#define DA_DATA2_ADDR_PING       0xC7044000
+#define DA_DATA3_ADDR_PING       0xC7048000
+#define DA_DATA4_ADDR_PING       0xC704C000
+#define DA_DATA5_ADDR_PING       0xC7050000
+#define DA_DATA6_ADDR_PING       0xC7054000
+#define DA_DATA7_ADDR_PING       0xC7058000
+#define DA_DATA8_ADDR_PING       0xC705C000
+
+#define DA_DATA1_ADDR_PONG       0xC7060000
+#define DA_DATA2_ADDR_PONG       0xC7064000
+#define DA_DATA3_ADDR_PONG       0xC7068000
+#define DA_DATA4_ADDR_PONG       0xC706C000
+#define DA_DATA5_ADDR_PONG       0xC7070000
+#define DA_DATA6_ADDR_PONG       0xC7074000
+#define DA_DATA7_ADDR_PONG       0xC7078000
+#define DA_DATA8_ADDR_PONG       0xC707C000
+
+#define DST_ADDR        0xC7002000      // [目的地址] 处理后的输出数据缓冲区起始位置
+#define DATA_COUNT      1000            // [数据量] 需要处理的数据包个数
+
+// ---------------- 协议定义 ----------------
+#define CH_ID           1               // 通道编号：1
+// 通道 ID 值定义：将 1 左移 20 位，放置在数据包的 bit[20] 位置
+// 目前的设计：bit[19:4]=数据, bit[20]=通道ID, 其他保留
+#define CH1_ID_VAL       (0x00000000)   //(0x03000000)   //
+#define CH2_ID_VAL       (0x00100000)   //(0x03100000)   //
+#define CH3_ID_VAL       (0x00200000)   //(0x03200000)   //
+#define CH4_ID_VAL       (0x00300000)   //(0x03300000)   //
+#define CH5_ID_VAL       (0x00400000)   //(0x03400000)   //
+#define CH6_ID_VAL       (0x00500000)   //(0x03500000)   //
+#define CH7_ID_VAL       (0x00600000)   //(0x03600000)   //
+#define CH8_ID_VAL       (0x00700000)   //(0x03700000)   //
+
+
+// ***************************************
+// *     定时器     *
+// ***************************************
+// 定时器1
+#define SOC_TMR_1_REGS                  (0x01C21000)
+#define TMR_INTCTLSTAT                  (0x44)
+#define TMR_INTCTLSTAT_PRDINTSTAT12     (0x00000002)//(0x00000001)//
+#define TMR_INTCTLSTAT_PRDINTSTAT34     (0x00020000)//(0x00010000)//
+
+
+// ***************************************
+// *     SPI发送     *
+// ***************************************
+// SPI寄存器地址
+#define SOC_SPI_0_REGS                  (0x01F0E000)
+#define SPI_SPIDAT1                     (0x3C)
+// SPI寄存器SPIDAT1位
+#define SPI_CSHOLD                      (1 << 28)
+#define SPI_FORMAT0                     (0 << 24)
+#define SPI_CS                          (0 << (16 + 0))
+// 汇总
+#define SPIDAT_REG_ADDR                 (0x01F0E03C)
+#define SPIDAT_H1                       (0x10000000)
+#define SPIDAT_H2                       (0x00000000)
+
+// ***************************************
+// *     硬件DA     *
+// ***************************************
+// IO寄存器地址
+#define SOC_GPIO_0_REGS                 (0x01E26000)
+#define GPIO_SET_DATA                   (0x40)//(0x18)
+#define GPIO_CLR_DATA                   (0x44)//(0x1C)
+// 简写
+#define GPIO_SET_ADDR                   (0x01E26040)
+#define GPIO_CLR_ADDR                   (0x01E26044)
+#define GPIO_DATA                       (0x00001000)
+
+// ==========================================
+// 寄存器分配
+// ==========================================
+// 使用宏定义给寄存器起有意义的名字，方便阅读和修改
+#define r_delay         r00     // [计数] 延时计数器，用于各种延时循环
+// 定时器
+#define r_tim_addr      r01     // [指针] 定时器地址，指向定时器控制寄存器
+#define r_tim_data      r02     // [数据] 定时器数据，存储定时器状态和中断标志
+// GPIO
+#define r_gpio_addr     r03     // [指针] GPIO地址，指向GPIO控制寄存器
+#define r_gpio_data     r04     // [数据] GPIO数据，存储GPIO操作值
+// SPI
+#define r_spi_cfg       r05     // [配置模板] 暂存 SPI 控制位 (CSHOLD, FORMAT, CS)
+#define r_spi_tx_buf    r06     // [发送缓冲] 拼接好的 32 位数据 (低16位数据+高16位控制)
+#define r_spi_tx_mask   r07     // [掩码] SPI发送掩码，用于数据位操作
+#define r_spi_reg_ptr   r08     // [硬件指针] 指向 SPI 寄存器 (SPIDAT1) 的地址
+// 数据打包
+#define r_ptr_src       r09     // [指针] 指向源数据的当前读取地址
+#define r_val_raw       r10     // [临时] 存放从内存读出的原始 16 位数据 (如 0xABCD)
+#define r_ch_id         r11     // [常量] 锁存通道 ID (0x00100000)，避免循环中重复加载
+#define r_pkt           r12     // [核心] 存放打包完成后的 32 位最终数据包
+// 逻辑控制
+#define r_state         r13     // [状态] 通道状态计数器，用于通道选择和循环控制
+#define r_ptr_cfg       r14     // [指针] 配置指针，用于访问配置信息
+#define r_da_en         r15     // [使能] DA采集开关，从定时器轮询处减轻负担
+#define r_ch_sel        r16     // [选择] 通道选择标志，存储8位通道启用状态
+#define r_ch_temp       r17     // [临时] 通道临时变量，用于通道处理过程
+#define r_send_count    r18     // [计数] 发送计数器，用于计数发送次数和控制缓冲区切换
+#define r_data_len      r19     // [长度] 数据长度，存储每次发送的数据总量
+#define r_ping_pong     r20     // [标志] 乒乓缓冲区标志，用于控制缓冲区切换
+#define r_flag_done     r21     // [标志] 完成标志，用于指示数据处理完成
+// 数据指针
+#define r_ptr_data1     r22     // [指针] 通道1数据指针，指向通道1的当前数据地址
+#define r_ptr_data2     r23     // [指针] 通道2数据指针，指向通道2的当前数据地址
+#define r_ptr_data3     r24     // [指针] 通道3数据指针，指向通道3的当前数据地址
+#define r_ptr_data4     r25     // [指针] 通道4数据指针，指向通道4的当前数据地址
+#define r_ptr_data5     r26     // [指针] 通道5数据指针，指向通道5的当前数据地址
+#define r_ptr_data6     r27     // [指针] 通道6数据指针，指向通道6的当前数据地址
+#define r_ptr_data7     r28     // [指针] 通道7数据指针，指向通道7的当前数据地址
+#define r_ptr_data8     r29     // [指针] 通道8数据指针，指向通道8的当前数据地址
+// 以下寄存器不能用做普通寄存器
+// #define r_temp          r30 // 有功能不能用做普通寄存器
+// #define r_temp          r31 // 有功能不能用做普通寄存器
+
+
+.macro USER_DELAY
+.mparam cycles
+    // 将传入的 cycles 参数加载到延时计数器
+    MOV     r_delay, cycles       
+DELAY_SPI_LOOP:
+    SUB     r_delay, r_delay, 1               // 计数器减 1
+    QBNE    DELAY_SPI_LOOP, r_delay, 0        // 如果不为 0，跳转继续循环
+.endm
+
+
+#endif 

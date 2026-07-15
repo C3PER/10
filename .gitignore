@@ -1,0 +1,11 @@
+Debug/
+Release/
+.clangd/
+.settings/
+.theia/
+*.out
+*.map
+*.obj
+*.d
+*.o
+_linkInfo.xml
