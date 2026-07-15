@@ -13,7 +13,9 @@
 #define FREQ_NUM      257
 #define CLASSES_NUM   12
 #define FS            16000
+#ifndef PI
 #define PI            3.141592653589793
+#endif
 
 /* ===== BC-ResNet 网络结构 ===== */
 #define CHANNEL0      16
