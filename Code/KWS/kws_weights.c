@@ -1,4 +1,4 @@
-/* BC-ResNet È¨ÖØÊı¾İ ¡ª ÓÉ export_weights.py ×Ô¶¯Éú³É */
+/* BC-ResNet æƒé‡æ•°æ® â€” ç”± export_weights.py è‡ªåŠ¨ç”Ÿæˆ */
 #include "kws_weights.h"
 
 const float head_conv_w[400] = {

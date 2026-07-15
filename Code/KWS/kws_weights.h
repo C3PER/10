@@ -1,10 +1,10 @@
-/* BC-ResNet È¨ÖØ ¡ª ÓÉ export_weights.py ×Ô¶¯Éú³É */
+/* BC-ResNet æƒé‡å£°æ˜ â€” ç”± export_weights.py è‡ªåŠ¨ç”Ÿæˆ */
 #ifndef KWS_WEIGHTS_H
 #define KWS_WEIGHTS_H
 
 #include <stddef.h>
 
-/* ===== ÌØÕ÷ÌáÈ¡²ÎÊı ===== */
+/* ===== éŸ³é¢‘å‚æ•°å®å®šä¹‰ ===== */
 #define FRM_LEN       160
 #define WIN_SIZE      480
 #define FFT_LEN       512
@@ -15,7 +15,7 @@
 #define FS            16000
 #define PI            3.141592653589793
 
-/* ===== BC-ResNet ÍøÂç½á¹¹ ===== */
+/* ===== BC-ResNet ç½‘ç»œç»“æ„ ===== */
 #define CHANNEL0      16
 #define CHANNEL1      8
 #define CHANNEL2      12
@@ -24,18 +24,18 @@
 #define CHANNEL5      32
 #define STAGE_NUM     4
 
-#define NUM_WEIGHT_ARRAYS  200  /* Êµ¼ÊÊıÁ¿¼ûÏÂ·½¸÷×é¶¨Òå */
+#define NUM_WEIGHT_ARRAYS  200  /* å®é™…æƒé‡æ•°ç»„æ•°é‡ï¼Œç”±ä¸‹æ–¹ extern å®šä¹‰ */
 
-/* ¹² 257 ¸öÈ¨ÖØÊı×é */
+/* ===== æƒé‡æ•°ç»„å£°æ˜ ===== */
 
-/* ===== Head Conv2d (1¡ú16, 5¡Á5, stride_h=2) ===== */
+/* ===== Head Conv2d (1->16, 5x5, stride_h=2) ===== */
 extern const float head_conv_w[400];  /* ((16, 1, 5, 5)) OIHW */
 extern const float head_bn_w[16];  /* BN weight */
 extern const float head_bn_b[16];  /* BN bias */
 extern const float head_bn_mean[16];  /* BN mean */
 extern const float head_bn_var[16];  /* BN var */
 
-/* Stage 0 Block 0: 16¡ú8 */
+/* Stage 0 Block 0: 16->8 */
 extern const float stage0_block0_main_conv1x1_w[128];  /* ((8, 16, 1, 1)) */
 extern const float stage0_block0_main_bn1_w[8];  /* BN w */
 extern const float stage0_block0_main_bn1_b[8];  /* BN b */
@@ -57,7 +57,7 @@ extern const float stage0_block0_br_bn_mean[8];  /* BN mean */
 extern const float stage0_block0_br_bn_var[8];  /* BN var */
 extern const float stage0_block0_br_proj_w[64];  /* ((8, 8, 1, 1)) */
 
-/* Stage 0 Block 1: 8¡ú8 skip */
+/* Stage 0 Block 1: 8->8 skip */
 extern const float stage0_block1_main_conv1x1_w[64];  /* ((8, 8, 1, 1)) */
 extern const float stage0_block1_main_bn1_w[8];  /* BN w */
 extern const float stage0_block1_main_bn1_b[8];  /* BN b */
@@ -79,7 +79,7 @@ extern const float stage0_block1_br_bn_mean[8];  /* BN mean */
 extern const float stage0_block1_br_bn_var[8];  /* BN var */
 extern const float stage0_block1_br_proj_w[64];  /* ((8, 8, 1, 1)) */
 
-/* Stage 1 Block 0: 8¡ú12 stride=2 */
+/* Stage 1 Block 0: 8->12 stride=2 */
 extern const float stage1_block0_main_conv1x1_w[96];  /* ((12, 8, 1, 1)) */
 extern const float stage1_block0_main_bn1_w[12];  /* BN w */
 extern const float stage1_block0_main_bn1_b[12];  /* BN b */
@@ -101,7 +101,7 @@ extern const float stage1_block0_br_bn_mean[12];  /* BN mean */
 extern const float stage1_block0_br_bn_var[12];  /* BN var */
 extern const float stage1_block0_br_proj_w[144];  /* ((12, 12, 1, 1)) */
 
-/* Stage 1 Block 1: 12¡ú12 skip */
+/* Stage 1 Block 1: 12->12 skip */
 extern const float stage1_block1_main_conv1x1_w[144];  /* ((12, 12, 1, 1)) */
 extern const float stage1_block1_main_bn1_w[12];  /* BN w */
 extern const float stage1_block1_main_bn1_b[12];  /* BN b */
@@ -123,7 +123,7 @@ extern const float stage1_block1_br_bn_mean[12];  /* BN mean */
 extern const float stage1_block1_br_bn_var[12];  /* BN var */
 extern const float stage1_block1_br_proj_w[144];  /* ((12, 12, 1, 1)) */
 
-/* Stage 2 Block 0: 12¡ú16 stride=2 */
+/* Stage 2 Block 0: 12->16 stride=2 */
 extern const float stage2_block0_main_conv1x1_w[192];  /* ((16, 12, 1, 1)) */
 extern const float stage2_block0_main_bn1_w[16];  /* BN w */
 extern const float stage2_block0_main_bn1_b[16];  /* BN b */
@@ -145,7 +145,7 @@ extern const float stage2_block0_br_bn_mean[16];  /* BN mean */
 extern const float stage2_block0_br_bn_var[16];  /* BN var */
 extern const float stage2_block0_br_proj_w[256];  /* ((16, 16, 1, 1)) */
 
-/* Stage 2 Block 1: 16¡ú16 skip */
+/* Stage 2 Block 1: 16->16 skip */
 extern const float stage2_block1_main_conv1x1_w[256];  /* ((16, 16, 1, 1)) */
 extern const float stage2_block1_main_bn1_w[16];  /* BN w */
 extern const float stage2_block1_main_bn1_b[16];  /* BN b */
@@ -167,7 +167,7 @@ extern const float stage2_block1_br_bn_mean[16];  /* BN mean */
 extern const float stage2_block1_br_bn_var[16];  /* BN var */
 extern const float stage2_block1_br_proj_w[256];  /* ((16, 16, 1, 1)) */
 
-/* Stage 2 Block 2: 16¡ú16 skip */
+/* Stage 2 Block 2: 16->16 skip */
 extern const float stage2_block2_main_conv1x1_w[256];  /* ((16, 16, 1, 1)) */
 extern const float stage2_block2_main_bn1_w[16];  /* BN w */
 extern const float stage2_block2_main_bn1_b[16];  /* BN b */
@@ -189,7 +189,7 @@ extern const float stage2_block2_br_bn_mean[16];  /* BN mean */
 extern const float stage2_block2_br_bn_var[16];  /* BN var */
 extern const float stage2_block2_br_proj_w[256];  /* ((16, 16, 1, 1)) */
 
-/* Stage 2 Block 3: 16¡ú16 skip */
+/* Stage 2 Block 3: 16->16 skip */
 extern const float stage2_block3_main_conv1x1_w[256];  /* ((16, 16, 1, 1)) */
 extern const float stage2_block3_main_bn1_w[16];  /* BN w */
 extern const float stage2_block3_main_bn1_b[16];  /* BN b */
@@ -211,7 +211,7 @@ extern const float stage2_block3_br_bn_mean[16];  /* BN mean */
 extern const float stage2_block3_br_bn_var[16];  /* BN var */
 extern const float stage2_block3_br_proj_w[256];  /* ((16, 16, 1, 1)) */
 
-/* Stage 3 Block 0: 16¡ú20 */
+/* Stage 3 Block 0: 16->20 */
 extern const float stage3_block0_main_conv1x1_w[320];  /* ((20, 16, 1, 1)) */
 extern const float stage3_block0_main_bn1_w[20];  /* BN w */
 extern const float stage3_block0_main_bn1_b[20];  /* BN b */
@@ -233,7 +233,7 @@ extern const float stage3_block0_br_bn_mean[20];  /* BN mean */
 extern const float stage3_block0_br_bn_var[20];  /* BN var */
 extern const float stage3_block0_br_proj_w[400];  /* ((20, 20, 1, 1)) */
 
-/* Stage 3 Block 1: 20¡ú20 skip */
+/* Stage 3 Block 1: 20->20 skip */
 extern const float stage3_block1_main_conv1x1_w[400];  /* ((20, 20, 1, 1)) */
 extern const float stage3_block1_main_bn1_w[20];  /* BN w */
 extern const float stage3_block1_main_bn1_b[20];  /* BN b */
@@ -255,7 +255,7 @@ extern const float stage3_block1_br_bn_mean[20];  /* BN mean */
 extern const float stage3_block1_br_bn_var[20];  /* BN var */
 extern const float stage3_block1_br_proj_w[400];  /* ((20, 20, 1, 1)) */
 
-/* Stage 3 Block 2: 20¡ú20 skip */
+/* Stage 3 Block 2: 20->20 skip */
 extern const float stage3_block2_main_conv1x1_w[400];  /* ((20, 20, 1, 1)) */
 extern const float stage3_block2_main_bn1_w[20];  /* BN w */
 extern const float stage3_block2_main_bn1_b[20];  /* BN b */
@@ -277,7 +277,7 @@ extern const float stage3_block2_br_bn_mean[20];  /* BN mean */
 extern const float stage3_block2_br_bn_var[20];  /* BN var */
 extern const float stage3_block2_br_proj_w[400];  /* ((20, 20, 1, 1)) */
 
-/* Stage 3 Block 3: 20¡ú20 skip */
+/* Stage 3 Block 3: 20->20 skip */
 extern const float stage3_block3_main_conv1x1_w[400];  /* ((20, 20, 1, 1)) */
 extern const float stage3_block3_main_bn1_w[20];  /* BN w */
 extern const float stage3_block3_main_bn1_b[20];  /* BN b */
@@ -299,21 +299,21 @@ extern const float stage3_block3_br_bn_mean[20];  /* BN mean */
 extern const float stage3_block3_br_bn_var[20];  /* BN var */
 extern const float stage3_block3_br_proj_w[400];  /* ((20, 20, 1, 1)) */
 
-/* ===== Final DWConv 5¡Á5 ===== */
+/* ===== Final DWConv 5->5 ===== */
 extern const float final_dwconv_w[500];  /* ((20, 1, 5, 5)) */
 extern const float final_dwconv_bn_w[20];  /* BN w */
 extern const float final_dwconv_bn_b[20];  /* BN b */
 extern const float final_dwconv_bn_mean[20];  /* BN mean */
 extern const float final_dwconv_bn_var[20];  /* BN var */
 
-/* ===== Expand Conv 1¡Á1 ===== */
+/* ===== Expand Conv 1->1 ===== */
 extern const float expand_conv_w[640];  /* ((32, 20, 1, 1)) */
 extern const float expand_bn_w[32];  /* BN w */
 extern const float expand_bn_b[32];  /* BN b */
 extern const float expand_bn_mean[32];  /* BN mean */
 extern const float expand_bn_var[32];  /* BN var */
 
-/* ===== Classifier Conv 1¡Á1 ===== */
+/* ===== Classifier Conv 1->1 ===== */
 extern const float classifier_w[384];  /* ((12, 32, 1, 1)) */
 extern const float classifier_b[12];  /* bias */
 

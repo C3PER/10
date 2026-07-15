@@ -6,7 +6,7 @@
 #include <string.h>
 
 #define KWS_W 101
-#define KWS_SCRATCH_SIZE 768004
+#define KWS_SCRATCH_SIZE 769028  /* 768004 + FFT_LEN*2 for FFT temp */
 
 /* ===== 全局预计算（放入 .far 段 / DDR2） ===== */
 #ifdef __TI_COMPILER_VERSION__
@@ -16,6 +16,8 @@
 #endif
 static float g_window[WIN_SIZE];
 static float g_mel_fb[FREQ_NUM * MELS_NUM];
+static float g_fft_cos[FFT_LEN / 2];  /* FFT twiddle factor cos table (indexed by n2) */
+static float g_fft_sin[FFT_LEN / 2];  /* FFT twiddle factor sin table */
 static float kws_scratch_buf[KWS_SCRATCH_SIZE];
 
 /* ===== Scratch buffer offsets (in floats) ===== */
@@ -120,6 +122,7 @@ static float kws_scratch_buf[KWS_SCRATCH_SIZE];
 #define OFS_nxt_11 752652
 #define OFS_fd_out 762752
 #define OFS_ex_out 764772
+#define OFS_fft_tmp 768004  /* FFT re/im temp (FFT_LEN*2 floats) */
 
 /* ===== 工具 ===== */
 static inline float fmaxf_local(float a, float b) { return a > b ? a : b; }
@@ -133,7 +136,7 @@ static void my_fft(float* x, float* y, long n, long sign) {
         if (i < j) { tr = x[j]; ti = y[j]; x[j] = x[i]; y[j] = y[i]; x[i] = tr; y[i] = ti; }
         k = n / 2; while (k < (j + 1)) { j -= k; k /= 2; } j += k; }
     for (n2 = 1; n2 < n; n2 *= 2) {
-        c1 = cosf(PI / n2); s1 = -sign * sinf(PI / n2); n1 = 2 * n2;
+        c1 = g_fft_cos[n2]; s1 = -sign * g_fft_sin[n2]; n1 = 2 * n2;
         c = 1.0f; s = 0.0f;
         for (j = 0; j < n2; j++) {
             for (i = j; i < n; i += n1) {
@@ -146,12 +149,18 @@ static void my_fft(float* x, float* y, long n, long sign) {
 }
 
 void kws_init(void) {
-    long i, j;
+    long i, j, n2;
     for (i = 0; i < WIN_SIZE; i++)
         g_window[i] = 0.5f * (1.0f - cosf(2.0f * PI * i / WIN_SIZE));
 
-    static float all_freqs[FREQ_NUM];
-    static float m_pts[MELS_NUM + 2], f_pts[MELS_NUM + 2], f_diff[MELS_NUM + 1];
+    /* FFT 旋转因子预计算 */
+    for (n2 = 1; n2 < FFT_LEN; n2 *= 2) {
+        g_fft_cos[n2] = cosf(PI / n2);
+        g_fft_sin[n2] = sinf(PI / n2);
+    }
+
+    float all_freqs[FREQ_NUM];
+    float m_pts[MELS_NUM + 2], f_pts[MELS_NUM + 2], f_diff[MELS_NUM + 1];
     float f_max = FS / 2.0f;
     for (i = 0; i < FREQ_NUM; i++) all_freqs[i] = (float)i * f_max / (FREQ_NUM - 1);
     float m_min = 2595.0f * log10f(1.0f + 0.0f / 700.0f);
@@ -173,7 +182,8 @@ static void extract_log_mel(const short wf[], int len, float* mel) {
     long nf = len / FRM_LEN + 1;
     long pad = WIN_SIZE / 2;
     for (n = 0; n < nf; n++) {
-        static float re[FFT_LEN], im[FFT_LEN];
+        float* re = &kws_scratch_buf[OFS_fft_tmp];
+        float* im = &kws_scratch_buf[OFS_fft_tmp + FFT_LEN];
         for (i = 0; i < FFT_LEN; i++) re[i] = im[i] = 0;
         for (i = 0; i < WIN_SIZE; i++) {
             long si = n * FRM_LEN + i - pad;
@@ -1334,11 +1344,19 @@ int kws_recognize(const short waveform[], int signal_length) {
         }
         logits[oc] = s;
     }
-    /* --- Argmax --- */
-    long best = 0;
-    for (i = 1; i < CLASSES_NUM; i++)
-        if (logits[i] > logits[best]) best = i;
-    return (int)best;
+    /* --- Softmax + Argmax --- */
+    {
+        float max_logit = logits[0];
+        float sum_exp = 0;
+        long best = 0;
+        for (i = 1; i < CLASSES_NUM; i++)
+            if (logits[i] > logits[best]) best = i;
+        max_logit = logits[best];
+        for (i = 0; i < CLASSES_NUM; i++)
+            sum_exp += expf(logits[i] - max_logit);
+        g_last_conf = expf(logits[best] - max_logit) / (sum_exp + 1.0e-12f);
+        return (int)best;
+    }
 }
 
 static const char* g_names[CLASSES_NUM] = {
@@ -1346,7 +1364,15 @@ static const char* g_names[CLASSES_NUM] = {
     "no", "off", "on", "right", "stop", "up", "yes"
 };
 
+static float g_last_conf = 0;  /* 上次推理的置信度 */
+
 const char* kws_label_name(int idx) {
     if (idx < 0 || idx >= CLASSES_NUM) return "???";
     return g_names[idx];
+}
+
+int kws_recognize_with_conf(const short waveform[], int signal_length, float* conf) {
+    int result = kws_recognize(waveform, signal_length);
+    if (conf) *conf = g_last_conf;
+    return result;
 }

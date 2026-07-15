@@ -1,9 +1,9 @@
 /**
  * @file user_kws.c
- * @brief KWS 主循环 + LCD 显示（按住识别，松开停止）
+ * @brief KWS 主循环 + LCD 显示（KEY1 切换采集/停止）
  *
- *   按住 KEY1 → 连续采集 2×8000 帧 → 推理 → 显示结果
- *   松开 KEY1 → 停止，显示最后结果
+ *   按 KEY1 → 开始连续采集+推理，结果实时显示在 LCD 上
+ *   再按 KEY1 → 停止，保留最后一次识别结果
  */
 
 #include "kws_inference.h"
@@ -30,7 +30,6 @@ static short g_waveform[KWS_WAVEFORM_SAMPLES];
 /* ===== 采集状态机 ===== */
 static int  g_blk      = 0;
 static int  g_running  = 0;
-static int  g_ready    = 0;      /* kws_init 是否已执行 */
 
 
 /* ===== 初始化 ===== */
@@ -77,20 +76,9 @@ void Kws_Init(void)
         GrContextForegroundSet(&Lcd_Context, ClrWhiteSmoke);
         GrStringDrawCentered(&Lcd_Context, "Loading model...", -1, 400, STATUS_Y + 10, 0);
     }
+    kws_init();
 
-    {
-        Lcd_Rectangle.sXMin = 0;
-        Lcd_Rectangle.sYMin = STATUS_Y;
-        Lcd_Rectangle.sXMax = 799;
-        Lcd_Rectangle.sYMax = STATUS_Y + STATUS_H;
-        GrContextForegroundSet(&Lcd_Context, ClrBlack);
-        GrRectFill(&Lcd_Context, &Lcd_Rectangle);
-        GrContextFontSet(&Lcd_Context, &g_sFontCm18);
-        GrContextForegroundSet(&Lcd_Context, ClrWhiteSmoke);
-        GrStringDrawCentered(&Lcd_Context, "Init ADC...", -1, 400, STATUS_Y + 10, 0);
-    }
-
-    /* ADC 初始化 + 启动（只启动一次） */
+    /* ADC 初始化 + 启动 */
     Adc_Init(KWS_ADC_FREQ, KWS_ADC_SAMPLES);
     Adc_Start();
 
@@ -104,7 +92,7 @@ void Kws_Init(void)
         GrRectFill(&Lcd_Context, &Lcd_Rectangle);
         GrContextFontSet(&Lcd_Context, &g_sFontCm18);
         GrContextForegroundSet(&Lcd_Context, ClrGreen);
-        GrStringDrawCentered(&Lcd_Context, "Ready.  Hold KEY1", -1, 400, STATUS_Y + 10, 0);
+        GrStringDrawCentered(&Lcd_Context, "Ready.  Press KEY1", -1, 400, STATUS_Y + 10, 0);
     }
 }
 
@@ -127,23 +115,6 @@ void Kws_Main(void)
 
             if (g_running)
             {
-                /* 首次按 ON 时加载模型（ADC 已先启动） */
-                if (!g_ready)
-                {
-                    Lcd_Rectangle.sXMin = 0;
-                    Lcd_Rectangle.sYMin = STATUS_Y;
-                    Lcd_Rectangle.sXMax = 799;
-                    Lcd_Rectangle.sYMax = STATUS_Y + STATUS_H;
-                    GrContextForegroundSet(&Lcd_Context, ClrBlack);
-                    GrRectFill(&Lcd_Context, &Lcd_Rectangle);
-                    GrContextFontSet(&Lcd_Context, &g_sFontCm18);
-                    GrContextForegroundSet(&Lcd_Context, ClrWhiteSmoke);
-                    GrStringDrawCentered(&Lcd_Context, "Loading model...", -1, 400, STATUS_Y + 10, 0);
-
-                    kws_init();
-                    g_ready = 1;
-                }
-
                 Lcd_Rectangle.sXMin = 0;
                 Lcd_Rectangle.sYMin = STATUS_Y;
                 Lcd_Rectangle.sXMax = 799;
@@ -188,15 +159,16 @@ void Kws_Main(void)
             {
                 g_blk = 0;
 
-                /* 推理 */
-                result = kws_recognize(g_waveform, KWS_WAVEFORM_SAMPLES);
+                /* 推理（带置信度） */
+                float conf = 0;
+                result = kws_recognize_with_conf(g_waveform, KWS_WAVEFORM_SAMPLES, &conf);
 
                 /* 状态栏 */
                 if (result >= 2)      sc = ClrGreen;
                 else if (result == 1) sc = ClrOrange;
                 else                  sc = ClrGray;
 
-                sprintf(buf, "%s (%d)", kws_label_name(result), result);
+                sprintf(buf, "%s  %.0f%%", kws_label_name(result), conf * 100.0f);
 
                 Lcd_Rectangle.sXMin = 0;
                 Lcd_Rectangle.sYMin = STATUS_Y;
@@ -219,7 +191,7 @@ void Kws_Main(void)
 
                     GrContextFontSet(&Lcd_Context, &g_sFontCm22);
                     GrContextForegroundSet(&Lcd_Context, rc);
-                    sprintf(buf, "%s [%d]", label, result);
+                    sprintf(buf, "%s  %.0f%%", label, conf * 100.0f);
                     GrStringDrawCentered(&Lcd_Context, buf, -1, 400, 250, 0);
                 }
             }
