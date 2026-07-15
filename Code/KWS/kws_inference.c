@@ -18,6 +18,7 @@ static float g_window[WIN_SIZE];
 static float g_mel_fb[FREQ_NUM * MELS_NUM];
 static float g_fft_cos[FFT_LEN / 2];  /* FFT twiddle factor cos table (indexed by n2) */
 static float g_fft_sin[FFT_LEN / 2];  /* FFT twiddle factor sin table */
+static float g_last_conf = 0;         /* 上次推理的置信度 */
 static float kws_scratch_buf[KWS_SCRATCH_SIZE];
 
 /* ===== Scratch buffer offsets (in floats) ===== */
@@ -199,7 +200,7 @@ static void extract_log_mel(const short wf[], int len, float* mel) {
 }
 
 int kws_recognize(const short waveform[], int signal_length) {
-    long i, h, w, oc, oh, ow, ic, fh, fw, ih, iw, e, ch;
+    long i, h, w, oc, oh, ow, ic, fh, fw, ih, e, ch;
     long W = signal_length / FRM_LEN + 1;
     if (W > KWS_W) return -1;
 
@@ -1363,8 +1364,6 @@ static const char* g_names[CLASSES_NUM] = {
     "_silence_", "_unknown_", "down", "go", "left",
     "no", "off", "on", "right", "stop", "up", "yes"
 };
-
-static float g_last_conf = 0;  /* 上次推理的置信度 */
 
 const char* kws_label_name(int idx) {
     if (idx < 0 || idx >= CLASSES_NUM) return "???";

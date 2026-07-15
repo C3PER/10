@@ -7,6 +7,7 @@
  */
 
 #include "kws_inference.h"
+#include "user_kws.h"
 #include "adc_api.h"
 #include "lcd_api.h"
 #include "grlib.h"
