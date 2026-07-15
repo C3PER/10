@@ -1,0 +1,86 @@
+
+#ifndef _PRU1_HP_
+#define _PRU1_HP_
+
+
+// ---------------- 地址定义 ----------------
+#define AD_CONFIG_AD_EN_ADDR     0xC6FFFFF2
+#define r_ptr_cfg       r14
+#define r_ad_en         r15
+
+
+// ***************************************
+// *     硬件AD     *
+// ***************************************
+#define GPIO5_13        (1 << 29)
+#define SOC_GPIO_0_REGS (0x01E26000)
+#define GPIO_SET_DATA   (0x68)
+#define GPIO_CLR_DATA   (0x6C)
+// ***************************************
+// *     定时器     *
+// ***************************************
+#define SOC_TMR_1_REGS  (0x01C21000)
+#define TMR_INTCTLSTAT	(0x44)
+#define TMR_INTCTLSTAT_PRDINTSTAT12     (0x00000002)
+#define TMR_INTCTLSTAT_PRDINTSTAT34     (0x00020000)
+
+
+// ***************************************
+// *      Global Macro definitions       *
+// ***************************************
+
+.macro  MOV32               
+.mparam dst, src
+    MOV     dst.w0, src & 0xFFFF
+    MOV     dst.w2, src >> 16
+.endm
+
+.macro  LD32
+.mparam dst,src
+    LBBO    dst,src,#0x00,4
+.endm
+
+.macro  LD16
+.mparam dst,src
+    LBBO    dst,src,#0x00,2
+.endm
+
+.macro  LD8
+.mparam dst,src
+    LBBO    dst,src,#0x00,1
+.endm
+
+.macro ST32
+.mparam src,dst
+    SBBO    src,dst,#0x00,4
+.endm
+
+.macro ST16
+.mparam src,dst
+    SBBO    src,dst,#0x00,2
+.endm
+
+.macro ST8
+.mparam src,dst
+    SBBO    src,dst,#0x00,1
+.endm
+
+
+// ***************************************
+// *    Global Structure Definitions     *
+// ***************************************
+
+.struct Global
+    .u32 regPointer
+    .u32 regVal
+.ends
+
+
+// ***************************************
+// *     Global Register Assignments     *
+// ***************************************
+
+.assign Global, r2, *, global
+
+
+#endif

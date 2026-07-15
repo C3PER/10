@@ -1,0 +1,40 @@
+# Dataset (5.5GB)
+data/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Model checkpoints (large binary)
+outputs/checkpoints/
+*.pth
+
+# CCS build artifacts
+Debug/
+*.obj
+*.d
+*.out
+*.map
+.clangd/
+
+# Generated C code (reproducible from export scripts)
+outputs/kws_inference.c
+outputs/kws_inference.h
+outputs/kws_weights.c
+outputs/kws_weights.h
+outputs/kws_inference.o
+outputs/kws_weights.o
+outputs/kws_test.c
+outputs/kws_test.exe
+outputs/debug_mel.c
+outputs/debug_mel.exe
+outputs/debug_mel.pcm
+outputs/debug_mel2.c
+outputs/debug_mel2.exe
+
+# OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
