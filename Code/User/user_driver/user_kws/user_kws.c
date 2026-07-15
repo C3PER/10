@@ -13,6 +13,8 @@
 #include "grlib.h"
 #include "system.h"
 #include "key_api.h"
+#include "uart_api.h"
+#include "uartStdio.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -36,8 +38,9 @@ static int  g_running  = 0;
 /* ===== 初始化 ===== */
 void Kws_Init(void)
 {
-    /* 系统 + 按键 + LCD */
+    /* 系统 + UART + 按键 + LCD */
     Sys_Init();
+    Uart2_Init(UART_BAUD_115200, UART_FIFO_8);
     Key_Init();
     Lcd_Init();
 
@@ -78,6 +81,12 @@ void Kws_Init(void)
         GrStringDrawCentered(&Lcd_Context, "Loading model...", -1, 400, STATUS_Y + 10, 0);
     }
     kws_init();
+
+    /* UART 启动信息 */
+    UARTprintf("\r\n========================================\r\n");
+    UARTprintf("  BC-ResNet KWS on TMS320C6748\r\n");
+    UARTprintf("  Ready. Press KEY1 to start\r\n");
+    UARTprintf("========================================\r\n\r\n");
 
     /* ADC 初始化 + 启动 */
     Adc_Init(KWS_ADC_FREQ, KWS_ADC_SAMPLES);
@@ -161,8 +170,21 @@ void Kws_Main(void)
                 g_blk = 0;
 
                 /* 推理（带置信度） */
-                float conf = 0;
-                result = kws_recognize_with_conf(g_waveform, KWS_WAVEFORM_SAMPLES, &conf);
+                float logits[CLASSES_NUM];
+                result = kws_recognize_with_logits(g_waveform, KWS_WAVEFORM_SAMPLES, logits);
+                float conf = logits[result];
+
+                /* UART 输出：全部 12 类 softmax 概率 */
+                {
+                    int ii;
+                    UARTprintf("\r\n---- KWS Result ----\r\n");
+                    for (ii = 0; ii < CLASSES_NUM; ii++) {
+                        char marker = (ii == result) ? '>' : ' ';
+                        UARTprintf(" %c %-12s  %5.1f%%\r\n",
+                                    marker, kws_label_name(ii), logits[ii] * 100.0f);
+                    }
+                    UARTprintf("--------------------\r\n");
+                }
 
                 /* 状态栏 */
                 if (result >= 2)      sc = ClrGreen;

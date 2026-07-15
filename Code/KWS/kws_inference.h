@@ -3,6 +3,7 @@
 #define KWS_INFERENCE_H
 
 #include <stddef.h>
+#include "kws_weights.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -16,6 +17,9 @@ int kws_recognize(const short waveform[], int signal_length);
 
 /* 推理并返回置信度：conf 输出最大 softmax 值 [0, 1] */
 int kws_recognize_with_conf(const short waveform[], int signal_length, float* conf);
+
+/* 推理并返回全部 12 类的 softmax 概率 (logits[12] 由调用者分配) */
+int kws_recognize_with_logits(const short waveform[], int signal_length, float logits_out[CLASSES_NUM]);
 
 /* 获取各类别名称 */
 const char* kws_label_name(int idx);

@@ -19,6 +19,7 @@ static float g_mel_fb[FREQ_NUM * MELS_NUM];
 static float g_fft_cos[FFT_LEN / 2];  /* FFT twiddle factor cos table (indexed by n2) */
 static float g_fft_sin[FFT_LEN / 2];  /* FFT twiddle factor sin table */
 static float g_last_conf = 0;         /* 上次推理的置信度 */
+static float g_last_logits[CLASSES_NUM]; /* 上次推理的 softmax 概率 */
 static float kws_scratch_buf[KWS_SCRATCH_SIZE];
 
 /* ===== Scratch buffer offsets (in floats) ===== */
@@ -1353,9 +1354,13 @@ int kws_recognize(const short waveform[], int signal_length) {
         for (i = 1; i < CLASSES_NUM; i++)
             if (logits[i] > logits[best]) best = i;
         max_logit = logits[best];
+        for (i = 0; i < CLASSES_NUM; i++) {
+            g_last_logits[i] = expf(logits[i] - max_logit);
+            sum_exp += g_last_logits[i];
+        }
         for (i = 0; i < CLASSES_NUM; i++)
-            sum_exp += expf(logits[i] - max_logit);
-        g_last_conf = expf(logits[best] - max_logit) / (sum_exp + 1.0e-12f);
+            g_last_logits[i] /= (sum_exp + 1.0e-12f);
+        g_last_conf = g_last_logits[best];
         return (int)best;
     }
 }
@@ -1373,5 +1378,15 @@ const char* kws_label_name(int idx) {
 int kws_recognize_with_conf(const short waveform[], int signal_length, float* conf) {
     int result = kws_recognize(waveform, signal_length);
     if (conf) *conf = g_last_conf;
+    return result;
+}
+
+int kws_recognize_with_logits(const short waveform[], int signal_length, float logits_out[CLASSES_NUM]) {
+    int result = kws_recognize(waveform, signal_length);
+    if (logits_out) {
+        int i;
+        for (i = 0; i < CLASSES_NUM; i++)
+            logits_out[i] = g_last_logits[i];
+    }
     return result;
 }
